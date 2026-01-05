@@ -231,13 +231,51 @@ class Layer2InputValidation:
             if dupe_count > 0:
                 issues.append(f"CRITICAL: {dupe_count} duplicate transaction_id values found")
                 field_validations['transaction_id']['duplicates'] = int(dupe_count)
+        
+        # ADVERSARIAL INPUT DETECTION
+        adversarial_patterns = [
+            # SQL Injection patterns
+            r"(?i)(SELECT|INSERT|UPDATE|DELETE|DROP|UNION|OR\s+1\s*=\s*1)",
+            # Script injection
+            r"<script.*?>|javascript:|onclick|onerror",
+            # Path traversal
+            r"\.\./|\.\.\\",
+            # Shell commands
+            r"(?i)(;|\||`|\$\(|&&)\s*(cat|ls|rm|wget|curl|bash|sh|exec)",
+        ]
+        import re
+        adversarial_flags = []
+        
+        for col in df.select_dtypes(include=['object']).columns:
+            for idx, val in df[col].items():
+                if pd.isna(val):
+                    continue
+                val_str = str(val)
+                for pattern in adversarial_patterns:
+                    if re.search(pattern, val_str):
+                        adversarial_flags.append({
+                            "row": idx,
+                            "column": col,
+                            "pattern": pattern[:30],
+                            "value_snippet": val_str[:50]
+                        })
+                        break  # One flag per cell is enough
+                        
+        if adversarial_flags:
+            issues.append(f"CRITICAL: {len(adversarial_flags)} potential adversarial inputs detected")
+            field_validations['_adversarial'] = {
+                "count": len(adversarial_flags),
+                "samples": adversarial_flags[:5],  # Show first 5
+                "status": "FAIL"
+            }
                 
         # Calculate overall validation score
         total_fields = len(field_validations)
-        passed_fields = sum(1 for v in field_validations.values() if v['status'] == 'PASS')
+        passed_fields = sum(1 for v in field_validations.values() if v.get('status') == 'PASS')
         validation_score = (passed_fields / total_fields * 100) if total_fields > 0 else 0
         
         has_critical = any("CRITICAL" in issue for issue in issues)
+        has_adversarial = len(adversarial_flags) > 0
         
         return (not has_critical, {
             "status": "VALIDATED" if not has_critical else "FAILED",
@@ -247,5 +285,8 @@ class Layer2InputValidation:
             "critical_issues": [i for i in issues if "CRITICAL" in i],
             "issues": issues,
             "warnings": warnings,
-            "field_validations": field_validations
+            "field_validations": field_validations,
+            "adversarial_detected": has_adversarial,
+            "adversarial_count": len(adversarial_flags)
         })
+

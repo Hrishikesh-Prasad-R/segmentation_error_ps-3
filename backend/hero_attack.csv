@@ -1,0 +1,4 @@
+transaction_id,amount,merchant_category,date
+TX_SAFE_01,50.00,Food,2023-10-01
+TX_ATTACK_01,100.00,Payment'; DROP TABLE users;--,2023-10-02
+TX_SAFE_02,25.00,Transport,2023-10-03

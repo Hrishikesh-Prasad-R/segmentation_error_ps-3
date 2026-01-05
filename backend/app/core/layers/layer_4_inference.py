@@ -424,28 +424,42 @@ class Layer4Inference:
             return [], ml_metadata
             
         try:
-            # ----- DETECTOR A: Statistical Outlier (Isolation Forest Simulation) -----
+            # ----- DETECTOR A: Real Isolation Forest (Unsupervised ML) -----
+            # Fits on-the-fly to the current dataset - no pre-training needed
             if 'amount' in df.columns:
+                from sklearn.ensemble import IsolationForest
+                
                 amounts = pd.to_numeric(df['amount'], errors='coerce').dropna()
-                if len(amounts) > 0:
-                    mean = amounts.mean()
-                    std = amounts.std() if len(amounts) > 1 else 1
+                if len(amounts) >= 10:  # Need minimum samples for meaningful detection
+                    # Reshape for sklearn
+                    X = amounts.values.reshape(-1, 1)
                     
-                    # Z-score based detection
-                    z_scores = (amounts - mean) / max(std, 0.001)
-                    outlier_threshold = 2.5  # 2.5 sigma
+                    # Fit Isolation Forest (contamination = expected outlier ratio)
+                    iso_forest = IsolationForest(
+                        n_estimators=100,
+                        contamination=0.05,  # Expect ~5% anomalies
+                        random_state=42,
+                        n_jobs=-1
+                    )
+                    predictions = iso_forest.fit_predict(X)
+                    scores = iso_forest.decision_function(X)
                     
-                    for idx in amounts[abs(z_scores) > outlier_threshold].index:
+                    # -1 = anomaly, 1 = normal
+                    anomaly_indices = amounts.index[predictions == -1]
+                    
+                    for idx in anomaly_indices:
+                        score = scores[list(amounts.index).index(idx)]
                         flags.append(AnomalyFlag(
                             row_index=int(idx),
                             column="amount",
                             detector="IsolationForest",
-                            severity="HIGH" if abs(z_scores[idx]) > 3 else "MEDIUM",
-                            reason=f"Amount {z_scores[idx]:.1f} sigma from mean",
+                            severity="HIGH" if score < -0.3 else "MEDIUM",
+                            reason=f"Isolation Forest anomaly score: {score:.3f}",
                             value=df.loc[idx, 'amount']
                         ))
                         
                 ml_metadata["models_run"].append("IsolationForest")
+                ml_metadata["isolation_forest_fitted"] = True
                 
             # ----- DETECTOR B: Association Rule Mining Simulation -----
             if 'merchant_category' in df.columns and 'amount' in df.columns:
@@ -497,6 +511,50 @@ class Layer4Inference:
                             ))
                             
                 ml_metadata["models_run"].append("TemporalAnalysis")
+            
+            # ----- DETECTOR D: Outside Distribution Detection -----
+            # Check if data characteristics differ from expected payment patterns
+            distribution_warnings = []
+            
+            if 'amount' in df.columns:
+                amounts = pd.to_numeric(df['amount'], errors='coerce').dropna()
+                if len(amounts) > 0:
+                    # Expected payment distribution: most transactions < $1000
+                    pct_high_value = (amounts > 1000).sum() / len(amounts)
+                    if pct_high_value > 0.5:  # More than 50% high-value is unusual
+                        distribution_warnings.append("Unusual: >50% transactions exceed $1000")
+                        for idx in amounts[amounts > 1000].index[:5]:
+                            flags.append(AnomalyFlag(
+                                row_index=int(idx),
+                                column="amount",
+                                detector="DistributionCheck",
+                                severity="MEDIUM",
+                                reason="Dataset has unusual proportion of high-value transactions",
+                                value=df.loc[idx, 'amount']
+                            ))
+                    
+                    # Check for impossible values (negative or extreme)
+                    if (amounts < 0).any():
+                        distribution_warnings.append("CRITICAL: Negative amounts detected")
+                    if (amounts > 10000000).any():  # >$10M is suspicious
+                        distribution_warnings.append("CRITICAL: Extremely high amounts detected")
+            
+            if 'merchant_category' in df.columns:
+                # Check for unknown/unexpected categories
+                expected_categories = {'Travel', 'Food', 'Electronics', 'Transport', 'Services', 
+                                      'Retail', 'Entertainment', 'Healthcare', 'Utilities'}
+                actual_categories = set(df['merchant_category'].dropna().unique())
+                unknown_categories = actual_categories - expected_categories
+                if len(unknown_categories) > len(expected_categories):
+                    distribution_warnings.append(f"Many unknown categories: {list(unknown_categories)[:3]}")
+            
+            if distribution_warnings:
+                ml_metadata["distribution_warnings"] = distribution_warnings
+                ml_metadata["outside_distribution"] = True
+            else:
+                ml_metadata["outside_distribution"] = False
+                
+            ml_metadata["models_run"].append("DistributionCheck")
                 
         except Exception as e:
             # FIREBREAK: Safe degradation

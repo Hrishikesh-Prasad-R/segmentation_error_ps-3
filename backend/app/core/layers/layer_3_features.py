@@ -290,3 +290,149 @@ class Layer3FeatureExtraction:
                 importance[col] = round(min(variance / 100, 1.0), 3)
                 
         return importance
+
+
+# ============================================================
+# DIMENSION RELEVANCE ANALYZER
+# ============================================================
+@dataclass
+class DimensionRelevance:
+    """Result of dimension applicability check."""
+    dimension: str
+    applicable: bool
+    reason: str
+    priority: int  # 1=Critical, 2=High, 3=Medium
+    required_columns: List[str]
+    found_columns: List[str]
+
+
+class DimensionRelevanceAnalyzer:
+    """
+    Automatically identifies which Data Quality dimensions are relevant
+    for a given dataset based on schema analysis.
+    
+    This satisfies the requirement:
+    "Automatically identify the relevant data quality dimensions to evaluate"
+    """
+    
+    # Define what columns trigger each dimension
+    DIMENSION_RULES = {
+        'Completeness': {
+            'description': 'Measures presence of required fields',
+            'triggers': ['*'],  # Always applies
+            'priority': 1,
+        },
+        'Accuracy': {
+            'description': 'Measures correctness of values against known formats',
+            'triggers': ['amount', 'currency', 'date', 'email', 'phone'],
+            'priority': 1,
+        },
+        'Consistency': {
+            'description': 'Measures uniformity across related fields',
+            'triggers': ['currency', 'country', 'status', 'type'],
+            'priority': 2,
+        },
+        'Timeliness': {
+            'description': 'Measures freshness and temporal validity',
+            'triggers': ['date', 'timestamp', 'created_at', 'updated_at', 'transaction_date'],
+            'priority': 2,
+        },
+        'Uniqueness': {
+            'description': 'Measures absence of duplicates in key fields',
+            'triggers': ['transaction_id', 'id', 'reference', 'order_id', 'payment_id'],
+            'priority': 1,
+        },
+        'Validity': {
+            'description': 'Measures conformance to defined value sets',
+            'triggers': ['status', 'type', 'category', 'merchant_category', 'payment_method'],
+            'priority': 2,
+        },
+        'Integrity': {
+            'description': 'Measures cross-reference consistency',
+            'triggers': ['customer_id', 'merchant_id', 'account_id', 'user_id'],
+            'priority': 3,
+        },
+    }
+    
+    def analyze(self, df: pd.DataFrame) -> Dict[str, DimensionRelevance]:
+        """
+        Analyze DataFrame and return relevance for each dimension.
+        
+        Returns:
+            Dict mapping dimension name to DimensionRelevance object
+        """
+        columns = [col.lower() for col in df.columns]
+        original_columns = list(df.columns)
+        results = {}
+        
+        for dimension, rules in self.DIMENSION_RULES.items():
+            triggers = rules['triggers']
+            found = []
+            
+            if triggers == ['*']:
+                # Always applicable
+                applicable = True
+                found = original_columns[:3]  # Show first 3 as examples
+                reason = "Applies to all datasets (measures null/missing values)"
+            else:
+                # Check if any trigger column exists
+                for trigger in triggers:
+                    for i, col in enumerate(columns):
+                        if trigger in col:
+                            found.append(original_columns[i])
+                
+                applicable = len(found) > 0
+                if applicable:
+                    reason = f"Relevant columns found: {', '.join(found[:3])}"
+                else:
+                    reason = f"No relevant columns (needs: {', '.join(triggers[:3])}...)"
+            
+            results[dimension] = DimensionRelevance(
+                dimension=dimension,
+                applicable=applicable,
+                reason=reason,
+                priority=rules['priority'],
+                required_columns=triggers if triggers != ['*'] else ['any'],
+                found_columns=found
+            )
+        
+        return results
+    
+    def get_applicable_dimensions(self, df: pd.DataFrame) -> List[str]:
+        """Return list of applicable dimension names."""
+        relevance = self.analyze(df)
+        return [dim for dim, rel in relevance.items() if rel.applicable]
+    
+    def get_dimension_summary(self, df: pd.DataFrame) -> Dict[str, Any]:
+        """
+        Get a summary suitable for display in the UI.
+        """
+        relevance = self.analyze(df)
+        
+        applicable = [r for r in relevance.values() if r.applicable]
+        not_applicable = [r for r in relevance.values() if not r.applicable]
+        
+        return {
+            "total_dimensions": len(relevance),
+            "applicable_count": len(applicable),
+            "not_applicable_count": len(not_applicable),
+            "applicable": [
+                {
+                    "dimension": r.dimension,
+                    "reason": r.reason,
+                    "priority": r.priority,
+                    "columns": r.found_columns[:3]
+                }
+                for r in sorted(applicable, key=lambda x: x.priority)
+            ],
+            "skipped": [
+                {
+                    "dimension": r.dimension,
+                    "reason": r.reason
+                }
+                for r in not_applicable
+            ],
+            "schema_columns": list(df.columns),
+            "auto_detected": True
+        }
+
