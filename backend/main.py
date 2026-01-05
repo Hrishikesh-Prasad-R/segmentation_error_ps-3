@@ -75,7 +75,7 @@ def read_root():
     return FileResponse(os.path.join(static_dir, "index.html"))
 
 @app.post("/analyze", response_model=AnalysisResult)
-async def analyze_dataset(file: UploadFile = File(...)):
+async def analyze_dataset(file: UploadFile = File(...), simulate_failure: bool = False):
     # Check file format
     if not file.filename.endswith(('.csv', '.json', '.xlsx')):
         return create_api_failure(
@@ -103,7 +103,7 @@ async def analyze_dataset(file: UploadFile = File(...)):
     
     # Run pipeline with exception handling
     try:
-        result = pipeline.analyze(df)
+        result = pipeline.analyze(df, simulate_ml_failure=simulate_failure)
         return result
     except Exception as e:
         return create_api_failure(

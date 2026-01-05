@@ -132,372 +132,388 @@
                     </button>
                 </div>
 
+                <!-- Advanced Controls -->
+                <div class="relative z-20 mt-4 flex justify-center items-center pointer-events-auto">
+                    <label class="flex items-center space-x-2 cursor-pointer group">
+                        <input type="checkbox" id="simulateFailure"
+                            class="form-checkbox h-4 w-4 text-red-500 rounded border-slate-600 bg-slate-700/50 focus:ring-red-500/50 hover:bg-slate-700 transition">
+                        <span class="text-xs text-slate-400 group-hover:text-red-400 transition-colors">⚡ Simulate AI
+                            Failure (Circuit Breaker)</span>
+                    </label>
+                </div>
+
                 <div class="relative z-20 mt-6 pt-6 border-t border-slate-700/50 space-x-3 pointer-events-auto">
                     <button onclick="runDemo(event)"
                         class="px-4 py-1.5 bg-slate-800/50 hover:bg-cyan-900/30 text-cyan-500 text-xs border border-cyan-500/20 rounded-full transition-all">
                         ▶ Run Single Demo
                     </button>
-                    <button onclick="runMultiDemo(event)"
+                    <button onclick="runDemo(event)"
                         class="px-4 py-1.5 bg-slate-800/50 hover:bg-purple-900/30 text-purple-400 text-xs border border-purple-500/20 rounded-full transition-all">
                         📁 Run Folder Demo
                     </button>
                 </div>
             </div>
-        </div>
 
-        <!-- Loading State -->
-        <div id="loading" class="hidden flex flex-col items-center justify-center py-20">
-            <div class="loader ease-linear rounded-full border-4 border-t-4 border-slate-700 h-12 w-12 mb-4"></div>
-            <p class="text-cyan-400 animate-pulse font-medium">GenAI Agent Analyzing Dimensions...</p>
-            <p class="text-xs text-slate-500 mt-2">Checking Completeness, Accuracy, Consistency...</p>
-        </div>
+            <!-- Loading State -->
+            <div id="loading" class="hidden flex flex-col items-center justify-center py-20">
+                <div class="loader ease-linear rounded-full border-4 border-t-4 border-slate-700 h-12 w-12 mb-4"></div>
+                <p class="text-cyan-400 animate-pulse font-medium">GenAI Agent Analyzing Dimensions...</p>
+                <p class="text-xs text-slate-500 mt-2">Checking Completeness, Accuracy, Consistency...</p>
+            </div>
 
-        <!-- Results Dashboard -->
-        <div id="dashboard" class="hidden space-y-6">
+            <!-- Results Dashboard -->
+            <div id="dashboard" class="hidden space-y-6">
 
-            <!-- Top Stats -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <!-- Composite Score -->
-                <div class="glass-panel rounded-2xl p-6 relative overflow-hidden">
-                    <div class="absolute top-0 right-0 w-32 h-32 bg-cyan-500/10 rounded-full blur-2xl -mr-10 -mt-10">
+                <!-- Top Stats -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- Composite Score -->
+                    <div class="glass-panel rounded-2xl p-6 relative overflow-hidden">
+                        <div
+                            class="absolute top-0 right-0 w-32 h-32 bg-cyan-500/10 rounded-full blur-2xl -mr-10 -mt-10">
+                        </div>
+                        <h3 class="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4">Composite Quality
+                            Score</h3>
+                        <div class="flex items-end space-x-2">
+                            <span id="composite-score" class="text-6xl font-bold text-white">0.0</span>
+                            <span class="text-lg text-slate-500 mb-2">/ 100</span>
+                        </div>
+                        <div id="overall-status"
+                            class="mt-4 inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-slate-800 text-slate-300">
+                            Analyzing...
+                        </div>
                     </div>
-                    <h3 class="text-sm font-semibold text-slate-400 uppercase tracking-wider mb-4">Composite Quality
-                        Score</h3>
-                    <div class="flex items-end space-x-2">
-                        <span id="composite-score" class="text-6xl font-bold text-white">0.0</span>
-                        <span class="text-lg text-slate-500 mb-2">/ 100</span>
-                    </div>
-                    <div id="overall-status"
-                        class="mt-4 inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-slate-800 text-slate-300">
-                        Analyzing...
+
+                    <!-- AI Insight -->
+                    <div class="glass-panel rounded-2xl p-6 col-span-2 relative">
+                        <div class="flex items-start space-x-4">
+                            <div class="p-2 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-lg shrink-0">
+                                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="text-white font-semibold text-lg mb-1">GenAI Executive Summary</h3>
+                                <p id="summary-text" class="text-slate-300 text-sm leading-relaxed">
+                                    Our agent has processed your dataset. Please review the detailed dimension breakdown
+                                    below. The system has applied the "Rules > ML" logical containment to ensure safety.
+                                </p>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <!-- AI Insight -->
-                <div class="glass-panel rounded-2xl p-6 col-span-2 relative">
-                    <div class="flex items-start space-x-4">
-                        <div class="p-2 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-lg shrink-0">
-                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <!-- Dimensions Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" id="dimensions-container">
+                    <!-- Dimensions will be injected here -->
+                </div>
+
+                <!-- WHY NOT BLACK BOX Section -->
+                <div
+                    class="glass-panel rounded-xl p-6 border border-purple-500/30 bg-gradient-to-r from-purple-900/20 to-indigo-900/20">
+                    <div class="flex items-center space-x-3 mb-4">
+                        <div class="p-2 bg-purple-500/20 rounded-lg">
+                            <svg class="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                                    d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z">
+                                </path>
                             </svg>
                         </div>
                         <div>
-                            <h3 class="text-white font-semibold text-lg mb-1">GenAI Executive Summary</h3>
-                            <p id="summary-text" class="text-slate-300 text-sm leading-relaxed">
-                                Our agent has processed your dataset. Please review the detailed dimension breakdown
-                                below. The system has applied the "Rules > ML" logical containment to ensure safety.
-                            </p>
+                            <h3 class="text-white font-semibold text-lg">Why This is NOT a Black Box</h3>
+                            <p class="text-xs text-purple-300">Full Transparency & Explainability</p>
+                        </div>
+                        <button onclick="toggleExplainability()"
+                            class="ml-auto text-xs bg-purple-500/20 hover:bg-purple-500/40 text-purple-300 px-3 py-1 rounded-full transition">
+                            Show Details
+                        </button>
+                    </div>
+
+                    <div id="explainability-content" class="hidden space-y-4">
+                        <!-- Transparency Guarantees -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div class="bg-slate-800/50 rounded-lg p-3">
+                                <div class="flex items-center space-x-2 mb-2">
+                                    <span class="text-green-400">✓</span>
+                                    <span class="text-white text-sm font-medium">Formula-Based Scoring</span>
+                                </div>
+                                <p class="text-xs text-slate-400">All 7 dimensions use explicit mathematical formulas,
+                                    not
+                                    learned weights.</p>
+                            </div>
+                            <div class="bg-slate-800/50 rounded-lg p-3">
+                                <div class="flex items-center space-x-2 mb-2">
+                                    <span class="text-green-400">✓</span>
+                                    <span class="text-white text-sm font-medium">Rules > ML</span>
+                                </div>
+                                <p class="text-xs text-slate-400">Machine Learning is advisory only. Deterministic rules
+                                    always take authority.</p>
+                            </div>
+                            <div class="bg-slate-800/50 rounded-lg p-3">
+                                <div class="flex items-center space-x-2 mb-2">
+                                    <span class="text-green-400">✓</span>
+                                    <span class="text-white text-sm font-medium">Auditable Logs</span>
+                                </div>
+                                <p class="text-xs text-slate-400">Every decision is logged with timestamp, inputs,
+                                    outputs,
+                                    and rationale.</p>
+                            </div>
+                        </div>
+
+                        <!-- Formulas Section -->
+                        <div class="bg-slate-900/50 rounded-lg p-4">
+                            <h4 class="text-sm font-semibold text-purple-300 mb-3">📐 Scoring Formulas (Fully
+                                Transparent)
+                            </h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs font-mono">
+                                <div class="flex justify-between"><span class="text-slate-400">Completeness:</span><span
+                                        class="text-cyan-400">100 × (1 - nulls/total)</span></div>
+                                <div class="flex justify-between"><span class="text-slate-400">Accuracy:</span><span
+                                        class="text-cyan-400">100 × (1 - issues/rows)</span></div>
+                                <div class="flex justify-between"><span class="text-slate-400">Validity:</span><span
+                                        class="text-cyan-400">100 × (1 - invalid/checks)</span></div>
+                                <div class="flex justify-between"><span class="text-slate-400">Uniqueness:</span><span
+                                        class="text-cyan-400">100 × (1 - dupes/rows)</span></div>
+                            </div>
+                        </div>
+
+                        <!-- ML Methods Section -->
+                        <div class="bg-slate-900/50 rounded-lg p-4">
+                            <h4 class="text-sm font-semibold text-purple-300 mb-3">🔬 ML Methods (Explainable, Not Deep
+                                Learning)</h4>
+                            <div class="space-y-2 text-xs">
+                                <div class="flex items-start space-x-2">
+                                    <span class="text-cyan-400 mt-0.5">→</span>
+                                    <div>
+                                        <span class="text-white">Z-Score Outlier Detection:</span>
+                                        <span class="text-slate-400 ml-1">z = (value - mean) / std. Flagged if |z| >
+                                            2.5σ</span>
+                                    </div>
+                                </div>
+                                <div class="flex items-start space-x-2">
+                                    <span class="text-cyan-400 mt-0.5">→</span>
+                                    <div>
+                                        <span class="text-white">Category Analysis:</span>
+                                        <span class="text-slate-400 ml-1">Compares value to category-specific baseline
+                                            statistics</span>
+                                    </div>
+                                </div>
+                                <div class="flex items-start space-x-2">
+                                    <span class="text-cyan-400 mt-0.5">→</span>
+                                    <div>
+                                        <span class="text-white">Temporal Patterns:</span>
+                                        <span class="text-slate-400 ml-1">Detects burst activity exceeding 2σ from daily
+                                            mean</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Decision Logic -->
+                        <div class="bg-slate-900/50 rounded-lg p-4">
+                            <h4 class="text-sm font-semibold text-purple-300 mb-3">⚙️ Decision Logic (Finite State
+                                Machine)
+                            </h4>
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-xs">
+                                    <thead>
+                                        <tr class="text-left text-slate-400 border-b border-slate-700">
+                                            <th class="pb-2">Decision</th>
+                                            <th class="pb-2">Condition</th>
+                                            <th class="pb-2">Human Override</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="text-slate-300">
+                                        <tr class="border-b border-slate-800">
+                                            <td class="py-2 text-green-400">SAFE_TO_USE</td>
+                                            <td>DQS ≥ 75%, Anomalies ≤ 5, No violations</td>
+                                            <td class="text-yellow-400">Allowed</td>
+                                        </tr>
+                                        <tr class="border-b border-slate-800">
+                                            <td class="py-2 text-yellow-400">REVIEW_REQUIRED</td>
+                                            <td>DQS ≥ 50%, OR Anomalies > 5</td>
+                                            <td class="text-yellow-400">Required</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="py-2 text-red-400">ESCALATE</td>
+                                            <td>DQS < 30%, OR Critical violations</td>
+                                            <td class="text-red-400">Mandatory</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
 
-            <!-- Dimensions Grid -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" id="dimensions-container">
-                <!-- Dimensions will be injected here -->
-            </div>
+                <!-- Governance Log -->
+                <div class="glass-panel rounded-xl p-4 border border-slate-700/50">
+                    <div class="flex items-center justify-between mb-3">
+                        <h4 class="text-xs font-semibold text-slate-400 uppercase">Responsibility Boundary & Audit Trace
+                        </h4>
+                        <span class="text-[10px] bg-slate-800 px-2 py-0.5 rounded text-slate-500">REAL-TIME LOGS</span>
+                    </div>
+                    <div id="audit-log"
+                        class="h-40 overflow-y-auto font-mono text-xs text-slate-400 space-y-1 p-2 bg-slate-900/50 rounded-lg">
+                        <!-- Logs injected here -->
+                    </div>
+                </div>
 
-            <!-- WHY NOT BLACK BOX Section -->
+            </div>
+        </div>
+
+        <!-- Template for Dimension Card -->
+        <template id="dimension-card-template">
             <div
-                class="glass-panel rounded-xl p-6 border border-purple-500/30 bg-gradient-to-r from-purple-900/20 to-indigo-900/20">
-                <div class="flex items-center space-x-3 mb-4">
-                    <div class="p-2 bg-purple-500/20 rounded-lg">
-                        <svg class="w-6 h-6 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z">
-                            </path>
-                        </svg>
+                class="glass-panel rounded-xl p-5 hover:bg-slate-800/50 transition-colors border-l-4 border-transparent">
+                <div class="flex justify-between items-start mb-3">
+                    <h4 class="text-white font-medium text-lg dimension-name">Dimension</h4>
+                    <div class="text-xs font-bold px-2 py-1 rounded bg-slate-800 dimension-score">0.0</div>
+                </div>
+
+                <div class="w-full bg-slate-700 rounded-full h-1.5 mb-4">
+                    <div class="bg-cyan-500 h-1.5 rounded-full dimension-bar" style="width: 0%"></div>
+                </div>
+
+                <div class="space-y-3">
+                    <div>
+                        <span class="text-[10px] text-slate-500 uppercase">Status & Explanation</span>
+                        <p class="text-xs text-slate-300 mt-0.5 dimension-explanation">Loading...</p>
                     </div>
                     <div>
-                        <h3 class="text-white font-semibold text-lg">Why This is NOT a Black Box</h3>
-                        <p class="text-xs text-purple-300">Full Transparency & Explainability</p>
+                        <span class="text-[10px] text-slate-500 uppercase">Recommendation</span>
+                        <p class="text-xs text-cyan-400 mt-0.5 dimension-recommendation">Waiting...</p>
                     </div>
-                    <button onclick="toggleExplainability()"
-                        class="ml-auto text-xs bg-purple-500/20 hover:bg-purple-500/40 text-purple-300 px-3 py-1 rounded-full transition">
-                        Show Details
-                    </button>
-                </div>
-
-                <div id="explainability-content" class="hidden space-y-4">
-                    <!-- Transparency Guarantees -->
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div class="bg-slate-800/50 rounded-lg p-3">
-                            <div class="flex items-center space-x-2 mb-2">
-                                <span class="text-green-400">✓</span>
-                                <span class="text-white text-sm font-medium">Formula-Based Scoring</span>
-                            </div>
-                            <p class="text-xs text-slate-400">All 7 dimensions use explicit mathematical formulas, not
-                                learned weights.</p>
-                        </div>
-                        <div class="bg-slate-800/50 rounded-lg p-3">
-                            <div class="flex items-center space-x-2 mb-2">
-                                <span class="text-green-400">✓</span>
-                                <span class="text-white text-sm font-medium">Rules > ML</span>
-                            </div>
-                            <p class="text-xs text-slate-400">Machine Learning is advisory only. Deterministic rules
-                                always take authority.</p>
-                        </div>
-                        <div class="bg-slate-800/50 rounded-lg p-3">
-                            <div class="flex items-center space-x-2 mb-2">
-                                <span class="text-green-400">✓</span>
-                                <span class="text-white text-sm font-medium">Auditable Logs</span>
-                            </div>
-                            <p class="text-xs text-slate-400">Every decision is logged with timestamp, inputs, outputs,
-                                and rationale.</p>
-                        </div>
-                    </div>
-
-                    <!-- Formulas Section -->
-                    <div class="bg-slate-900/50 rounded-lg p-4">
-                        <h4 class="text-sm font-semibold text-purple-300 mb-3">📐 Scoring Formulas (Fully Transparent)
-                        </h4>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs font-mono">
-                            <div class="flex justify-between"><span class="text-slate-400">Completeness:</span><span
-                                    class="text-cyan-400">100 × (1 - nulls/total)</span></div>
-                            <div class="flex justify-between"><span class="text-slate-400">Accuracy:</span><span
-                                    class="text-cyan-400">100 × (1 - issues/rows)</span></div>
-                            <div class="flex justify-between"><span class="text-slate-400">Validity:</span><span
-                                    class="text-cyan-400">100 × (1 - invalid/checks)</span></div>
-                            <div class="flex justify-between"><span class="text-slate-400">Uniqueness:</span><span
-                                    class="text-cyan-400">100 × (1 - dupes/rows)</span></div>
-                        </div>
-                    </div>
-
-                    <!-- ML Methods Section -->
-                    <div class="bg-slate-900/50 rounded-lg p-4">
-                        <h4 class="text-sm font-semibold text-purple-300 mb-3">🔬 ML Methods (Explainable, Not Deep
-                            Learning)</h4>
-                        <div class="space-y-2 text-xs">
-                            <div class="flex items-start space-x-2">
-                                <span class="text-cyan-400 mt-0.5">→</span>
-                                <div>
-                                    <span class="text-white">Z-Score Outlier Detection:</span>
-                                    <span class="text-slate-400 ml-1">z = (value - mean) / std. Flagged if |z| >
-                                        2.5σ</span>
-                                </div>
-                            </div>
-                            <div class="flex items-start space-x-2">
-                                <span class="text-cyan-400 mt-0.5">→</span>
-                                <div>
-                                    <span class="text-white">Category Analysis:</span>
-                                    <span class="text-slate-400 ml-1">Compares value to category-specific baseline
-                                        statistics</span>
-                                </div>
-                            </div>
-                            <div class="flex items-start space-x-2">
-                                <span class="text-cyan-400 mt-0.5">→</span>
-                                <div>
-                                    <span class="text-white">Temporal Patterns:</span>
-                                    <span class="text-slate-400 ml-1">Detects burst activity exceeding 2σ from daily
-                                        mean</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Decision Logic -->
-                    <div class="bg-slate-900/50 rounded-lg p-4">
-                        <h4 class="text-sm font-semibold text-purple-300 mb-3">⚙️ Decision Logic (Finite State Machine)
-                        </h4>
-                        <div class="overflow-x-auto">
-                            <table class="w-full text-xs">
-                                <thead>
-                                    <tr class="text-left text-slate-400 border-b border-slate-700">
-                                        <th class="pb-2">Decision</th>
-                                        <th class="pb-2">Condition</th>
-                                        <th class="pb-2">Human Override</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="text-slate-300">
-                                    <tr class="border-b border-slate-800">
-                                        <td class="py-2 text-green-400">SAFE_TO_USE</td>
-                                        <td>DQS ≥ 75%, Anomalies ≤ 5, No violations</td>
-                                        <td class="text-yellow-400">Allowed</td>
-                                    </tr>
-                                    <tr class="border-b border-slate-800">
-                                        <td class="py-2 text-yellow-400">REVIEW_REQUIRED</td>
-                                        <td>DQS ≥ 50%, OR Anomalies > 5</td>
-                                        <td class="text-yellow-400">Required</td>
-                                    </tr>
-                                    <tr>
-                                        <td class="py-2 text-red-400">ESCALATE</td>
-                                        <td>DQS < 30%, OR Critical violations</td>
-                                        <td class="text-red-400">Mandatory</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
+                    <div class="flex items-center space-x-2 pt-2 border-t border-slate-700/50">
+                        <span class="text-[10px] text-slate-500">ML Confidence: </span>
+                        <span class="text-[10px] text-white dimension-confidence">0%</span>
                     </div>
                 </div>
             </div>
+        </template>
 
-            <!-- Governance Log -->
-            <div class="glass-panel rounded-xl p-4 border border-slate-700/50">
-                <div class="flex items-center justify-between mb-3">
-                    <h4 class="text-xs font-semibold text-slate-400 uppercase">Responsibility Boundary & Audit Trace
-                    </h4>
-                    <span class="text-[10px] bg-slate-800 px-2 py-0.5 rounded text-slate-500">REAL-TIME LOGS</span>
-                </div>
-                <div id="audit-log"
-                    class="h-40 overflow-y-auto font-mono text-xs text-slate-400 space-y-1 p-2 bg-slate-900/50 rounded-lg">
-                    <!-- Logs injected here -->
-                </div>
-            </div>
+        <script>
+            function runDemo(e) {
+                e.stopPropagation(); // Prevent file upload trigger
+                document.getElementById('upload-section').classList.add('hidden');
+                document.getElementById('loading').classList.remove('hidden');
 
-        </div>
-    </div>
-
-    <!-- Template for Dimension Card -->
-    <template id="dimension-card-template">
-        <div class="glass-panel rounded-xl p-5 hover:bg-slate-800/50 transition-colors border-l-4 border-transparent">
-            <div class="flex justify-between items-start mb-3">
-                <h4 class="text-white font-medium text-lg dimension-name">Dimension</h4>
-                <div class="text-xs font-bold px-2 py-1 rounded bg-slate-800 dimension-score">0.0</div>
-            </div>
-
-            <div class="w-full bg-slate-700 rounded-full h-1.5 mb-4">
-                <div class="bg-cyan-500 h-1.5 rounded-full dimension-bar" style="width: 0%"></div>
-            </div>
-
-            <div class="space-y-3">
-                <div>
-                    <span class="text-[10px] text-slate-500 uppercase">Status & Explanation</span>
-                    <p class="text-xs text-slate-300 mt-0.5 dimension-explanation">Loading...</p>
-                </div>
-                <div>
-                    <span class="text-[10px] text-slate-500 uppercase">Recommendation</span>
-                    <p class="text-xs text-cyan-400 mt-0.5 dimension-recommendation">Waiting...</p>
-                </div>
-                <div class="flex items-center space-x-2 pt-2 border-t border-slate-700/50">
-                    <span class="text-[10px] text-slate-500">ML Confidence: </span>
-                    <span class="text-[10px] text-white dimension-confidence">0%</span>
-                </div>
-            </div>
-        </div>
-    </template>
-
-    <script>
-        function runDemo(e) {
-            e.stopPropagation(); // Prevent file upload trigger
-            document.getElementById('upload-section').classList.add('hidden');
-            document.getElementById('loading').classList.remove('hidden');
-
-            // Simulate processing delay
-            setTimeout(() => {
-                const mockData = {
-                    "composite_score": 78.5,
-                    "overall_status": "Review-required",
-                    "summary": "AI Analysis: Moderate quality (78.5). Rules passed, but ML detected anomalies in accuracy. Recommended actions: Review high-value transactions manually.",
-                    "dimensions": [
-                        {
-                            "dimension": "Completeness",
-                            "score": 100,
-                            "confidence": 99.0,
-                            "explanation": "No missing values detected in critical fields.",
-                            "status": "Safe-to-use",
-                            "recommendation": "Maintain checks."
-                        },
-                        {
-                            "dimension": "Accuracy",
-                            "score": 65.0,
-                            "confidence": 45.0,
-                            "explanation": "ML Confidence low (45%). Rules passed but AI detects anomalies.",
-                            "status": "Review-required",
-                            "recommendation": "Manual verification of recent transactions."
-                        },
-                        {
-                            "dimension": "Consistency",
-                            "score": 92.0,
-                            "confidence": 88.0,
-                            "explanation": "Data consistency is high across tables.",
-                            "status": "Safe-to-use",
-                            "recommendation": "None."
-                        },
-                        {
-                            "dimension": "Timeliness",
-                            "score": 50.0,
-                            "confidence": 95.0,
-                            "explanation": "Critical Rule: Value Date is in the past > 30 days.",
-                            "status": "Escalate",
-                            "recommendation": "Reject batch."
-                        }
-                    ],
-                    "logs": [
-                        "Starting Analysis...",
-                        "Identified Dimensions: Completeness, Accuracy, Consistency, Timeliness",
-                        "Evaluating Completeness...",
-                        "  Rules: 100, ML: 99. Safe.",
-                        "Evaluating Accuracy...",
-                        "  Rules: Pass, ML Confidence: 45%.",
-                        "  > Conflict detected. Logic prioritizes Safety -> Review-required.",
-                        "Evaluating Timeliness...",
-                        "  > CRITICAL FLAG detected. Rules Override ML. Status: Escalate.",
-                        "Analysis Complete. Composite Score: 78.5"
-                    ]
-                };
-                renderDashboard(mockData);
-            }, 2000);
-        }
-
-        async function handleFiles(fileList) {
-            if (!fileList || fileList.length === 0) return;
-
-            // UI Transition
-            document.getElementById('upload-section').classList.add('hidden');
-            document.getElementById('loading').classList.remove('hidden');
-            const loadingText = document.querySelector('#loading p.animate-pulse');
-
-            const results = [];
-
-            try {
-                // Process files sequentially
-                for (let i = 0; i < fileList.length; i++) {
-                    const file = fileList[i];
-                    loadingText.innerText = `Analyzing ${file.name} (${i + 1}/${fileList.length})...`;
-
-                    const formData = new FormData();
-                    formData.append('file', file);
-
-                    const response = await fetch('/analyze', {
-                        method: 'POST',
-                        body: formData
-                    });
-
-                    if (response.ok) {
-                        const data = await response.json();
-                        data.filename = file.name;
-                        results.push(data);
-                    }
-                }
-
-                if (results.length > 0) {
-                    renderMultiDashboard(results);
-                } else {
-                    throw new Error("No files were successfully analyzed");
-                }
-
-            } catch (error) {
-                console.error(error);
-                alert('Analysis failed. See console for details.');
-                location.reload();
+                // Simulate processing delay
+                setTimeout(() => {
+                    const mockData = {
+                        "composite_score": 78.5,
+                        "overall_status": "Review-required",
+                        "summary": "AI Analysis: Moderate quality (78.5). Rules passed, but ML detected anomalies in accuracy. Recommended actions: Review high-value transactions manually.",
+                        "dimensions": [
+                            {
+                                "dimension": "Completeness",
+                                "score": 100,
+                                "confidence": 99.0,
+                                "explanation": "No missing values detected in critical fields.",
+                                "status": "Safe-to-use",
+                                "recommendation": "Maintain checks."
+                            },
+                            {
+                                "dimension": "Accuracy",
+                                "score": 65.0,
+                                "confidence": 45.0,
+                                "explanation": "ML Confidence low (45%). Rules passed but AI detects anomalies.",
+                                "status": "Review-required",
+                                "recommendation": "Manual verification of recent transactions."
+                            },
+                            {
+                                "dimension": "Consistency",
+                                "score": 92.0,
+                                "confidence": 88.0,
+                                "explanation": "Data consistency is high across tables.",
+                                "status": "Safe-to-use",
+                                "recommendation": "None."
+                            },
+                            {
+                                "dimension": "Timeliness",
+                                "score": 50.0,
+                                "confidence": 95.0,
+                                "explanation": "Critical Rule: Value Date is in the past > 30 days.",
+                                "status": "Escalate",
+                                "recommendation": "Reject batch."
+                            }
+                        ],
+                        "logs": [
+                            "Starting Analysis...",
+                            "Identified Dimensions: Completeness, Accuracy, Consistency, Timeliness",
+                            "Evaluating Completeness...",
+                            "  Rules: 100, ML: 99. Safe.",
+                            "Evaluating Accuracy...",
+                            "  Rules: Pass, ML Confidence: 45%.",
+                            "  > Conflict detected. Logic prioritizes Safety -> Review-required.",
+                            "Evaluating Timeliness...",
+                            "  > CRITICAL FLAG detected. Rules Override ML. Status: Escalate.",
+                            "Analysis Complete. Composite Score: 78.5"
+                        ]
+                    };
+                    renderDashboard(mockData);
+                }, 2000);
             }
-        }
 
-        function renderMultiDashboard(results) {
-            document.getElementById('loading').classList.add('hidden');
-            const dashboard = document.getElementById('dashboard');
-            dashboard.classList.remove('hidden');
+            async function handleFiles(fileList) {
+                if (!fileList || fileList.length === 0) return;
 
-            // Clear existing content to rebuild
-            dashboard.innerHTML = '';
+                // UI Transition
+                document.getElementById('upload-section').classList.add('hidden');
+                document.getElementById('loading').classList.remove('hidden');
+                const loadingText = document.querySelector('#loading p.animate-pulse');
 
-            // 1. GLOBAL SUMMARY HEADER
-            const avgScore = results.reduce((acc, r) => acc + r.composite_score, 0) / results.length;
-            const criticalCount = results.filter(r => r.overall_status === 'Escalate').length;
-            const reviewCount = results.filter(r => r.overall_status === 'Review-required').length;
+                const results = [];
 
-            const summaryHTML = `
+                try {
+                    // Process files sequentially
+                    for (let i = 0; i < fileList.length; i++) {
+                        const file = fileList[i];
+                        loadingText.innerText = `Analyzing ${file.name} (${i + 1}/${fileList.length})...`;
+
+                        const formData = new FormData();
+                        formData.append('file', file);
+
+                        const simulateFailure = document.getElementById('simulateFailure').checked;
+                        const response = await fetch(`/analyze?simulate_failure=${simulateFailure}`, {
+                            method: 'POST',
+                            body: formData
+                        });
+
+                        if (response.ok) {
+                            const data = await response.json();
+                            data.filename = file.name;
+                            results.push(data);
+                        }
+                    }
+
+                    if (results.length > 0) {
+                        renderMultiDashboard(results);
+                    } else {
+                        throw new Error("No files were successfully analyzed");
+                    }
+
+                } catch (error) {
+                    console.error(error);
+                    alert('Analysis failed. See console for details.');
+                    location.reload();
+                }
+            }
+
+            function renderMultiDashboard(results) {
+                document.getElementById('loading').classList.add('hidden');
+                const dashboard = document.getElementById('dashboard');
+                dashboard.classList.remove('hidden');
+
+                // Clear existing content to rebuild
+                dashboard.innerHTML = '';
+
+                // 1. GLOBAL SUMMARY HEADER
+                const avgScore = results.reduce((acc, r) => acc + r.composite_score, 0) / results.length;
+                const criticalCount = results.filter(r => r.overall_status === 'Escalate').length;
+                const reviewCount = results.filter(r => r.overall_status === 'Review-required').length;
+
+                const summaryHTML = `
                 <div class="glass-panel rounded-2xl p-6 mb-8 border border-white/10 relative overflow-hidden">
                     <div class="absolute inset-0 bg-gradient-to-r from-cyan-900/20 to-purple-900/20"></div>
                     <div class="relative z-10 flex flex-col md:flex-row justify-between items-center gap-6">
@@ -522,15 +538,15 @@
                     </div>
                 </div>
             `;
-            dashboard.insertAdjacentHTML('beforeend', summaryHTML);
+                dashboard.insertAdjacentHTML('beforeend', summaryHTML);
 
-            // 2. RENDER INDIVIDUAL CARDS
-            results.forEach((data, index) => {
-                const datasetId = `dataset-${index}`;
-                const statusColor = data.overall_status === 'Escalate' ? 'text-red-400 border-red-500/50' :
-                    (data.overall_status === 'Review-required' ? 'text-yellow-400 border-yellow-500/50' : 'text-green-400 border-green-500/50');
+                // 2. RENDER INDIVIDUAL CARDS
+                results.forEach((data, index) => {
+                    const datasetId = `dataset-${index}`;
+                    const statusColor = data.overall_status === 'Escalate' ? 'text-red-400 border-red-500/50' :
+                        (data.overall_status === 'Review-required' ? 'text-yellow-400 border-yellow-500/50' : 'text-green-400 border-green-500/50');
 
-                const cardHTML = `
+                    const cardHTML = `
                     <div class="glass-panel rounded-xl border border-slate-700/50 overflow-hidden mb-6">
                         <!-- HEADER -->
                         <div class="p-4 bg-slate-800/50 border-b border-white/5 flex flex-wrap items-center justify-between gap-4 cursor-pointer hover:bg-slate-700/30 transition-colors"
@@ -593,16 +609,16 @@
                         </div>
                     </div>
                 `;
-                dashboard.insertAdjacentHTML('beforeend', cardHTML);
-            });
-        }
+                    dashboard.insertAdjacentHTML('beforeend', cardHTML);
+                });
+            }
 
-        function renderDimensionCard(dim) {
-            let color = 'bg-cyan-500';
-            if (dim.score < 70) color = 'bg-red-500';
-            else if (dim.score < 90) color = 'bg-yellow-500';
+            function renderDimensionCard(dim) {
+                let color = 'bg-cyan-500';
+                if (dim.score < 70) color = 'bg-red-500';
+                else if (dim.score < 90) color = 'bg-yellow-500';
 
-            return `
+                return `
                 <div class="glass-panel p-4 rounded-lg relative overflow-hidden group hover:border-white/20 transition-colors">
                     <div class="flex justify-between items-start mb-2">
                         <span class="text-sm font-medium text-white">${dim.dimension}</span>
@@ -618,83 +634,83 @@
                     </div>
                 </div>
             `;
-        }
-
-        function toggleSection(id) {
-            const section = document.getElementById(id);
-            if (section.classList.contains('hidden')) {
-                section.classList.remove('hidden');
-            } else {
-                section.classList.add('hidden');
             }
-        }
 
-        // Retain runDemo for legacy support if needed, or redirect
-        function runDemo(e) {
-            e.stopPropagation();
-            alert("Please use the 'Upload Payment Data' section to select specific files or folders for the demo.");
-            // Or implement a mock version of handleFiles if strictly simulated
-        }
-
-        function animateValue(obj, start, end, duration) {
-            let startTimestamp = null;
-            const step = (timestamp) => {
-                if (!startTimestamp) startTimestamp = timestamp;
-                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
-                obj.innerHTML = (progress * (end - start) + start).toFixed(1);
-                if (progress < 1) {
-                    window.requestAnimationFrame(step);
+            function toggleSection(id) {
+                const section = document.getElementById(id);
+                if (section.classList.contains('hidden')) {
+                    section.classList.remove('hidden');
+                } else {
+                    section.classList.add('hidden');
                 }
-            };
-            window.requestAnimationFrame(step);
-        }
-
-        function toggleExplainability() {
-            const content = document.getElementById('explainability-content');
-            const button = event.target;
-            if (content.classList.contains('hidden')) {
-                content.classList.remove('hidden');
-                button.textContent = 'Hide Details';
-            } else {
-                content.classList.add('hidden');
-                button.textContent = 'Show Details';
             }
-        }
 
-        function runMultiDemo(e) {
-            e.stopPropagation();
-            document.getElementById('upload-section').classList.add('hidden');
-            document.getElementById('loading').classList.remove('hidden');
+            // Retain runDemo for legacy support if needed, or redirect
+            function runDemo(e) {
+                e.stopPropagation();
+                alert("Please use the 'Upload Payment Data' section to select specific files or folders for the demo.");
+                // Or implement a mock version of handleFiles if strictly simulated
+            }
 
-            // Simulate processing multiple files
-            setTimeout(() => {
-                const multiFileData = {
-                    "composite_score": 78.6,
-                    "overall_status": "Review-required",
-                    "summary": "Multi-File Analysis Complete: 3 files processed. Average DQS: 78.6%. File 1 (payments_jan.csv): 92% SAFE. File 2 (payments_feb.csv): 71% REVIEW. File 3 (payments_mar.csv): 73% REVIEW. Recommendation: Review flagged items in files 2 and 3 before processing.",
-                    "dimensions": [
-                        { "dimension": "Completeness", "score": 95, "confidence": 98, "explanation": "Aggregated across 3 files. Minor gaps in file 3.", "status": "Safe-to-use", "recommendation": "Maintain checks." },
-                        { "dimension": "Accuracy", "score": 78, "confidence": 72, "explanation": "File 2 has several format issues.", "status": "Review-required", "recommendation": "Validate file 2 data." },
-                        { "dimension": "Validity", "score": 82, "confidence": 88, "explanation": "3 invalid currency codes found.", "status": "Review-required", "recommendation": "Standardize currency formats." },
-                        { "dimension": "Uniqueness", "score": 88, "confidence": 95, "explanation": "2 cross-file duplicate IDs detected.", "status": "Review-required", "recommendation": "Check for duplicate transactions across files." }
-                    ],
-                    "logs": [
-                        "[10:30:00.000] Multi-File Mode: 3 files detected",
-                        "[10:30:00.100] Processing: payments_jan.csv (30 rows) → DQS: 92%",
-                        "[10:30:00.250] Processing: payments_feb.csv (45 rows) → DQS: 71%",
-                        "[10:30:00.400] Processing: payments_mar.csv (28 rows) → DQS: 73%",
-                        "[10:30:00.500] Cross-file duplicate check: 2 duplicates found",
-                        "[10:30:00.550] Aggregating results...",
-                        "[10:30:00.600] Combined DQS: 78.6% (weighted by row count)",
-                        "[10:30:00.650] Decision: REVIEW_REQUIRED (File 2 has issues)",
-                        "[10:30:00.700] Responsibility: HUMAN_DATA_STEWARD",
-                        "[10:30:00.750] Multi-file report generated"
-                    ]
+            function animateValue(obj, start, end, duration) {
+                let startTimestamp = null;
+                const step = (timestamp) => {
+                    if (!startTimestamp) startTimestamp = timestamp;
+                    const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                    obj.innerHTML = (progress * (end - start) + start).toFixed(1);
+                    if (progress < 1) {
+                        window.requestAnimationFrame(step);
+                    }
                 };
-                renderDashboard(multiFileData);
-            }, 2500);
-        }
-    </script>
+                window.requestAnimationFrame(step);
+            }
+
+            function toggleExplainability() {
+                const content = document.getElementById('explainability-content');
+                const button = event.target;
+                if (content.classList.contains('hidden')) {
+                    content.classList.remove('hidden');
+                    button.textContent = 'Hide Details';
+                } else {
+                    content.classList.add('hidden');
+                    button.textContent = 'Show Details';
+                }
+            }
+
+            function runMultiDemo(e) {
+                e.stopPropagation();
+                document.getElementById('upload-section').classList.add('hidden');
+                document.getElementById('loading').classList.remove('hidden');
+
+                // Simulate processing multiple files
+                setTimeout(() => {
+                    const multiFileData = {
+                        "composite_score": 78.6,
+                        "overall_status": "Review-required",
+                        "summary": "Multi-File Analysis Complete: 3 files processed. Average DQS: 78.6%. File 1 (payments_jan.csv): 92% SAFE. File 2 (payments_feb.csv): 71% REVIEW. File 3 (payments_mar.csv): 73% REVIEW. Recommendation: Review flagged items in files 2 and 3 before processing.",
+                        "dimensions": [
+                            { "dimension": "Completeness", "score": 95, "confidence": 98, "explanation": "Aggregated across 3 files. Minor gaps in file 3.", "status": "Safe-to-use", "recommendation": "Maintain checks." },
+                            { "dimension": "Accuracy", "score": 78, "confidence": 72, "explanation": "File 2 has several format issues.", "status": "Review-required", "recommendation": "Validate file 2 data." },
+                            { "dimension": "Validity", "score": 82, "confidence": 88, "explanation": "3 invalid currency codes found.", "status": "Review-required", "recommendation": "Standardize currency formats." },
+                            { "dimension": "Uniqueness", "score": 88, "confidence": 95, "explanation": "2 cross-file duplicate IDs detected.", "status": "Review-required", "recommendation": "Check for duplicate transactions across files." }
+                        ],
+                        "logs": [
+                            "[10:30:00.000] Multi-File Mode: 3 files detected",
+                            "[10:30:00.100] Processing: payments_jan.csv (30 rows) → DQS: 92%",
+                            "[10:30:00.250] Processing: payments_feb.csv (45 rows) → DQS: 71%",
+                            "[10:30:00.400] Processing: payments_mar.csv (28 rows) → DQS: 73%",
+                            "[10:30:00.500] Cross-file duplicate check: 2 duplicates found",
+                            "[10:30:00.550] Aggregating results...",
+                            "[10:30:00.600] Combined DQS: 78.6% (weighted by row count)",
+                            "[10:30:00.650] Decision: REVIEW_REQUIRED (File 2 has issues)",
+                            "[10:30:00.700] Responsibility: HUMAN_DATA_STEWARD",
+                            "[10:30:00.750] Multi-file report generated"
+                        ]
+                    };
+                    renderDashboard(multiFileData);
+                }, 2500);
+            }
+        </script>
 </body>
 
 </html>

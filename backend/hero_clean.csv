@@ -1,0 +1,9 @@
+transaction_id,amount,merchant_category,date
+TX_001,45.50,Food,2023-10-01
+TX_002,120.00,Retail,2023-10-01
+TX_003,15.00,Transport,2023-10-02
+TX_004,89.99,Services,2023-10-02
+TX_005,12.50,Food,2023-10-03
+TX_006,250.00,Travel,2023-10-03
+TX_007,65.00,Retail,2023-10-04
+TX_008,30.00,Transport,2023-10-04
