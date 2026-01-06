@@ -21,11 +21,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Mount static directory
-static_dir = os.path.join(os.path.dirname(__file__), "app/static")
-if not os.path.exists(static_dir):
-    os.makedirs(static_dir)
-app.mount("/static", StaticFiles(directory=static_dir), name="static")
+# Mount static directory - frontend folder is at parent level
+frontend_dir = os.path.join(os.path.dirname(__file__), "..", "frontend")
+frontend_dir = os.path.abspath(frontend_dir)
+if not os.path.exists(frontend_dir):
+    os.makedirs(frontend_dir)
+app.mount("/static", StaticFiles(directory=frontend_dir), name="static")
 
 pipeline = PipelineOrchestrator()
 
@@ -72,7 +73,7 @@ def create_api_failure(category: FailureCategory, message: str, layer: str = "AP
 
 @app.get("/")
 def read_root():
-    return FileResponse(os.path.join(static_dir, "index.html"))
+    return FileResponse(os.path.join(frontend_dir, "index.html"))
 
 @app.post("/analyze", response_model=AnalysisResult)
 async def analyze_dataset(file: UploadFile = File(...), simulate_failure: bool = False):
