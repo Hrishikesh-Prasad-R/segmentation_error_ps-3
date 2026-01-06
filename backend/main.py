@@ -21,11 +21,18 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Mount static directory - frontend folder is at parent level
+# Mount static directory - frontend folder location varies by environment
+# Local: ../frontend (relative to backend/)  
+# Docker: /app/frontend (absolute path in container)
 frontend_dir = os.path.join(os.path.dirname(__file__), "..", "frontend")
 frontend_dir = os.path.abspath(frontend_dir)
+
+# Fallback for Docker environment
+if not os.path.exists(frontend_dir):
+    frontend_dir = "/app/frontend"
 if not os.path.exists(frontend_dir):
     os.makedirs(frontend_dir)
+    
 app.mount("/static", StaticFiles(directory=frontend_dir), name="static")
 
 pipeline = PipelineOrchestrator()

@@ -14,13 +14,16 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements first (better caching)
-COPY requirements.txt .
+COPY backend/requirements.txt .
 
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy application code
-COPY . .
+# Copy backend code
+COPY backend/ .
+
+# Copy frontend
+COPY frontend/ /app/frontend/
 
 # Expose port
 EXPOSE 8000
