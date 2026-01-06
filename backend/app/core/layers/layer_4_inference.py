@@ -24,9 +24,9 @@ from enum import Enum
 import hashlib
 import os
 
-# Google Gemini API
+# Google Gemini API (New SDK)
 try:
-    import google.generativeai as genai
+    from google import genai
     GEMINI_AVAILABLE = True
 except ImportError:
     GEMINI_AVAILABLE = False
@@ -265,28 +265,55 @@ class Layer4Inference:
             recommendation="Review records with logical inconsistencies" if consistency_issues > 0 else "Data is internally consistent"
         ))
         
-        # 6. TIMELINESS - Data freshness
+        # 6. TIMELINESS - Data freshness and temporal quality
         timeliness_score = 100.0
         timeliness_issues = 0
+        timeliness_details = "Data is current"
         
         if 'date' in df.columns:
             dates = pd.to_datetime(df['date'], errors='coerce').dropna()
             if len(dates) > 0:
                 latest_date = dates.max()
+                earliest_date = dates.min()
                 days_old = (pd.Timestamp.now() - latest_date).days
+                date_spread = (latest_date - earliest_date).days
                 
-                # Penalize based on age
+                # Check for future dates (invalid)
+                future_dates = (dates > pd.Timestamp.now()).sum()
+                if future_dates > 0:
+                    timeliness_score -= min(30, future_dates * 10)
+                    timeliness_issues += future_dates
+                
+                # Check for date consistency (variance in gaps)
+                if len(dates) >= 3:
+                    sorted_dates = dates.sort_values()
+                    gaps = sorted_dates.diff().dropna().dt.days
+                    avg_gap = gaps.mean() if len(gaps) > 0 else 0
+                    gap_variance = gaps.std() if len(gaps) > 0 else 0
+                    
+                    # High gap variance means inconsistent timing
+                    if gap_variance > avg_gap * 2 and avg_gap > 0:
+                        gap_penalty = min(15, gap_variance / 10)
+                        timeliness_score -= gap_penalty
+                        timeliness_issues += 1
+                
+                # Check data age (more lenient - historical analysis is valid)
+                # Only penalize if data is VERY old and has no date spread
                 if days_old > 365:
-                    timeliness_score = 50.0
-                    timeliness_issues = days_old
+                    if date_spread < 30:  # Old AND compressed data = suspicious
+                        timeliness_score -= 20
+                        timeliness_issues += 1
+                    else:
+                        timeliness_score -= 5  # Just old, but has normal spread
                 elif days_old > 90:
-                    timeliness_score = 70.0
-                    timeliness_issues = days_old
-                elif days_old > 30:
-                    timeliness_score = 85.0
-                    timeliness_issues = days_old
-                elif days_old > 7:
-                    timeliness_score = 95.0
+                    timeliness_score -= 3  # Minor penalty for 3+ month old data
+                
+                # Check for all same date (suspicious batch)
+                if date_spread == 0 and len(dates) > 5:
+                    timeliness_score -= 10
+                    timeliness_issues += 1
+                
+                timeliness_score = max(0, min(100, timeliness_score))  # Clamp 0-100
                     
         dimensions.append(DimensionResult(
             name="Timeliness",
@@ -596,19 +623,21 @@ class Layer4Inference:
             summary = self._generate_template_summary(dqs, violations, anomaly_count)
             return summary, metadata
         
-        # Try to use Google Gemini API
+        # Try to use Google Gemini API (New SDK)
         api_key = os.environ.get('GEMINI_API_KEY') or os.environ.get('GOOGLE_API_KEY')
         
         if GEMINI_AVAILABLE and api_key:
             try:
-                genai.configure(api_key=api_key)
-                model = genai.GenerativeModel('gemini-2.0-flash')
+                client = genai.Client(api_key=api_key)
                 
                 # Build detailed prompt
                 prompt = self._build_gemini_prompt(dqs, dimensions, anomaly_flags, violations)
                 
-                # Call Gemini API
-                response = model.generate_content(prompt)
+                # Call Gemini API (new SDK pattern)
+                response = client.models.generate_content(
+                    model='gemini-2.0-flash',
+                    contents=prompt
+                )
                 summary = response.text
                 
                 metadata["model"] = "gemini-2.0-flash"

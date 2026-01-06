@@ -13,9 +13,9 @@ import os
 from typing import Dict, Any, List, Optional
 from dataclasses import dataclass
 
-# Google Gemini API
+# Google Gemini API (New SDK)
 try:
-    import google.generativeai as genai
+    from google import genai
     GEMINI_AVAILABLE = True
 except ImportError:
     GEMINI_AVAILABLE = False
@@ -65,19 +65,21 @@ class Layer12FinalSummary:
             "gemini_available": GEMINI_AVAILABLE
         }
         
-        # Try to use Google Gemini API
+        # Try to use Google Gemini API (New SDK)
         api_key = os.environ.get('GEMINI_API_KEY') or os.environ.get('GOOGLE_API_KEY')
         
         if GEMINI_AVAILABLE and api_key:
             try:
-                genai.configure(api_key=api_key)
-                model = genai.GenerativeModel('gemini-2.0-flash')
+                client = genai.Client(api_key=api_key)
                 
                 # Build comprehensive prompt with full context
                 prompt = self._build_comprehensive_prompt(context)
                 
-                # Call Gemini API
-                response = model.generate_content(prompt)
+                # Call Gemini API (new SDK pattern)
+                response = client.models.generate_content(
+                    model='gemini-2.0-flash',
+                    contents=prompt
+                )
                 summary = response.text
                 
                 metadata["model"] = "gemini-2.0-flash"

@@ -50,7 +50,7 @@ class DecisionThresholds:
     REVIEW_HIGH_ANOMALIES = 3           # >= 3 high-severity anomalies → REVIEW
     
     # TIER 3: SAFE thresholds
-    SAFE_DQS_THRESHOLD = 85.0           # DQS >= 85% → likely SAFE
+    SAFE_DQS_THRESHOLD = 90.0           # DQS >= 90% → likely SAFE
     SAFE_CONFIDENCE_THRESHOLD = 75      # Confidence >= 75 → trustworthy
     
     # AI ADVISORY thresholds (only used when rules don't trigger)
@@ -380,13 +380,13 @@ class Layer9ComprehensiveDecision:
         # =============================================
         
         # If we reach here, rules don't mandate action but quality isn't perfect
-        # Default to REVIEW_REQUIRED (conservative)
-        if critical_violations > 0 or dqs < 80 or confidence_score < 60:
+        # Default to REVIEW_REQUIRED (conservative) - require DQS >= 90 for SAFE
+        if critical_violations > 0 or dqs < 90 or confidence_score < 60:
             return (
                 DecisionState.REVIEW_REQUIRED,
                 DecisionReasoning(
                     decision_state="REVIEW_REQUIRED",
-                    primary_reason="Conservative default: Quality metrics in gray zone",
+                    primary_reason="Conservative default: Quality metrics in gray zone (DQS < 90%)",
                     rule_triggers=[f"DQS={dqs:.1f}%, violations={critical_violations}"],
                     ai_inputs=[f"AI confidence={confidence_score}% (informational)"],
                     overridden_by_rules=False
